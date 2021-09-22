@@ -97,9 +97,16 @@ def gaussian_filter(input_image, size, sigmax, sigmay):
     row = np.zeros((1,w))
     for j in range(w):
         row[:,j] = math.exp(-math.pow(j-w2,2)/(2*math.pow(sigmax,2)))/(math.sqrt(2*math.pi)*sigmax)
+   
+    #normalizing
+    colsum, rowsum = 0, 0
+    for i in range(h):
+        colsum += col[i,:]       
+    for j in range(w):
+        rowsum += row[:,j]    
     
     #convolution
-    conv = convolve(convolve(input_image,col),row)  
+    conv = convolve(convolve(input_image,col/colsum),row/rowsum)  
     
     return reflect_padding(conv,size)
 
