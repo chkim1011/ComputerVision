@@ -6,46 +6,51 @@ from matplotlib import pyplot as plt
 
 import utils
 
+
+
 def gaussian_pyramid(input_image, level):
-    """
-    Args:
-        input_image (numpy array): input array
-        level (int): level of pyramid
-
-    Return:
-        Gaussian pyramid (list of numpy array)
-    """
-
-    # Your code
-    # Note that elements in the list must be arranged in descending order in image resolution (from big image to small image).
-    return
+    
+    G = []
+    G.append(input_image)
+    for i in range(level):                 
+        G.append(utils.down_sampling(G[i]))
+        
+    return G
 
 
 def laplacian_pyramid(gaussian_pyramid):
-    """
-    Args:
-        gaussian_pyramid (list of numpy array): result from the gaussian_pyramid function
+    
+    L = []
+    G = gaussian_pyramid
+    level = len(G)-1
+    
+    for i in range(level):
+        expand = utils.up_sampling(G[i+1])
+        L.append(utils.safe_subtract(G[i],expand))
+        
+    L.append(G[level])    
+    
+    return L
 
-    Return:
-        laplacian pyramid (list of numpy array)
-    """
 
-    # Your code
-    # Note that elements in the list must be arranged in descending order in image resolution (from big image to small image).
-    return
 
 def blend_images(image1, image2, mask, level):
-    """
-    Args:
-        image1 (numpy array): background image
-        image2 (numpy array): object image
-        mask (numpy array): mask
-        level (int): level of pyramid
-    Return:
-        blended image (numpy array)
-    """
-    # Your code
-    return
+      
+    G_A, G_B, G_m = gaussian_pyramid(image1, level), gaussian_pyramid(image2, level), gaussian_pyramid(mask, level)    
+    L_A, L_B = laplacian_pyramid(G_A), laplacian_pyramid(G_B)
+        
+    G_combined = []
+    for i in range(level):
+        masked = utils.safe_subtract(L_A[i], G_m[i])
+        G_combined.append(utils.safe_add(masked,L_B[i]))
+    
+    temp = utils.safe_subtract(utils.up_sampling(G_A[level]),utils.up_sampling(G_m[level]))
+    blended = utils.safe_add(utils.safe_add(temp,utils.up_sampling(G_B[level])),G_combined[level-1])
+    for i in range(1,level):
+        blended = utils.up_sampling(blended)
+        blended = utils.safe_add(blended, G_combined[level-1-i])
+
+    return blended
 
 
 if __name__ == '__main__':
@@ -76,15 +81,15 @@ if __name__ == '__main__':
         plt.savefig(os.path.join(logdir, 'gaussian_pyramid.jpeg'))
         plt.show()
 
-        ret = laplacian_pyramid(ret)
-        if ret is not None:
-            plt.figure()
-            for i in range(len(ret)):
-                plt.subplot(1, len(ret), i + 1)
-                plt.imshow(ret[i].astype(np.uint8))
-                plt.axis('off')
-            plt.savefig(os.path.join(logdir, 'laplacian_pyramid.jpeg'))
-            plt.show()
+    ret = laplacian_pyramid(ret)
+    if ret is not None:
+        plt.figure()
+        for i in range(len(ret)):
+            plt.subplot(1, len(ret), i + 1)
+            plt.imshow(ret[i].astype(np.uint8))
+            plt.axis('off')
+        plt.savefig(os.path.join(logdir, 'laplacian_pyramid.jpeg'))
+        plt.show()
 
     ret = blend_images(hand, flame, mask, level)
     if ret is not None:
@@ -93,3 +98,4 @@ if __name__ == '__main__':
         plt.axis('off')
         plt.savefig(os.path.join(logdir, 'blended.jpeg'))
         plt.show()
+

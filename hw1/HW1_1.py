@@ -122,29 +122,29 @@ if __name__ == '__main__':
 
     kernel_1 = np.ones((5,5)) / 25.
     sigmax, sigmay = 5, 5
-#     ret = reflect_padding(image.copy(), kernel_1.shape)
-#     if ret is not None:
-#         plt.figure()
-#         plt.imshow(ret.astype(np.uint8))
-#         plt.axis('off')
-#         plt.savefig(os.path.join(logdir, 'reflect.jpeg'))
-#         plt.show()
+    ret = reflect_padding(image.copy(), kernel_1.shape)
+    if ret is not None:
+        plt.figure()
+        plt.imshow(ret.astype(np.uint8))
+        plt.axis('off')
+        plt.savefig(os.path.join(logdir, 'reflect.jpeg'))
+        plt.show()
 
-#     ret = convolve(image.copy(), kernel_1)
-#     if ret is not None:
-#         plt.figure()
-#         plt.imshow(ret.astype(np.uint8))
-#         plt.axis('off')
-#         plt.savefig(os.path.join(logdir, 'convolve.jpeg'))
-#         plt.show()
+    ret = convolve(image.copy(), kernel_1)
+    if ret is not None:
+        plt.figure()
+        plt.imshow(ret.astype(np.uint8))
+        plt.axis('off')
+        plt.savefig(os.path.join(logdir, 'convolve.jpeg'))
+        plt.show()
 
-#     ret = median_filter(image.copy(), kernel_1.shape)
-#     if ret is not None:
-#         plt.figure()
-#         plt.imshow(ret.astype(np.uint8))
-#         plt.axis('off')
-#         plt.savefig(os.path.join(logdir, 'median.jpeg'))
-#         plt.show()
+    ret = median_filter(image.copy(), kernel_1.shape)
+    if ret is not None:
+        plt.figure()
+        plt.imshow(ret.astype(np.uint8))
+        plt.axis('off')
+        plt.savefig(os.path.join(logdir, 'median.jpeg'))
+        plt.show()
 
     ret = gaussian_filter(image.copy(), kernel_1.shape, sigmax, sigmay)
     if ret is not None:
