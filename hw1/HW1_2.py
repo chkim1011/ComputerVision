@@ -44,11 +44,14 @@ def blend_images(image1, image2, mask, level):
         masked = utils.safe_subtract(L_A[i], G_m[i])
         G_combined.append(utils.safe_add(masked,L_B[i]))
     
+    #version1
     temp = utils.safe_subtract(utils.up_sampling(G_A[level]),utils.up_sampling(G_m[level]))
     blended = utils.safe_add(utils.safe_add(temp,utils.up_sampling(G_B[level])),G_combined[level-1])
     for i in range(1,level):
         blended = utils.up_sampling(blended)
         blended = utils.safe_add(blended, G_combined[level-1-i])
+    
+    
 
     return blended
 
