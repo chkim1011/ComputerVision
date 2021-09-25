@@ -39,20 +39,21 @@ def blend_images(image1, image2, mask, level):
     G_A, G_B, G_m = gaussian_pyramid(image1, level), gaussian_pyramid(image2, level), gaussian_pyramid(mask, level)    
     L_A, L_B = laplacian_pyramid(G_A), laplacian_pyramid(G_B)
         
+    #combining Laplacian pyramid
     G_combined = []
     for i in range(level):
         masked = utils.safe_subtract(L_A[i], G_m[i])
         G_combined.append(utils.safe_add(masked,L_B[i]))
     
-    #version1
+    #Adding low resolution images
     temp = utils.safe_subtract(utils.up_sampling(G_A[level]),utils.up_sampling(G_m[level]))
     blended = utils.safe_add(utils.safe_add(temp,utils.up_sampling(G_B[level])),G_combined[level-1])
+    
+    #upsampling
     for i in range(1,level):
         blended = utils.up_sampling(blended)
         blended = utils.safe_add(blended, G_combined[level-1-i])
     
-    
-
     return blended
 
 
