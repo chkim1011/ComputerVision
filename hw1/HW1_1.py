@@ -13,20 +13,24 @@ def reflect_padding(input_image, size):
     
     H, W, channel = input_image.shape #image height, width, channel
     h, w = size #filter height, width 
+    h2, w2 = h//2, w//2
     
+    new = np.zeros((H+2*h2,W+2*w2,channel))
     for ch in range(channel):    
         
+        new[h2:H+h2,w2:W+w2,ch] = input_image[:,:,ch]
+        
         #row padding
-        for i in range(h // 2):
-            input_image[i,:,ch] = input_image[h-i-1,:,ch]
-            input_image[H-i-1,:,ch] = input_image[H+i-h,:,ch]
+        for i in range(h2):
+            new[i,:,ch] = new[h-i-1,:,ch]
+            new[H+2*h2-1-i,:,ch] = new[H+2*h2+i-h,:,ch]
             
         #col padding
-        for j in range(w // 2):    
-            input_image[:,j,ch] = input_image[:,w-j-1,ch]
-            input_image[:,W-j-1,ch] = input_image[:,W+j-w,ch]
+        for j in range(w2):    
+            new[:,j,ch] = new[:,w-j-1,ch]
+            new[:,W+2*w2-1-j,ch] = new[:,W+2*w2+j-w,ch]
                 
-    return input_image
+    return new
 
 
 def convolve(input_image, Kernel):
@@ -34,9 +38,11 @@ def convolve(input_image, Kernel):
         if s % 2 == 0:
             raise Exception("Kernel size must be odd")
     
-    H, W, channel = input_image.shape #image height, width, channel
     h, w = Kernel.shape #Kernel height, width 
+    padded_image = reflect_padding(input_image, (h,w))
+    H, W, channel = padded_image.shape #image height, width, channel
     h2, w2 = h//2, w//2
+        
     
     #flip kernel
     for i in range(h2):
@@ -45,20 +51,17 @@ def convolve(input_image, Kernel):
         Kernel[:,j], Kernel[:,2*w2-j] = Kernel[:,2*w2-j], Kernel[:,j]
         
     #convolve
-    new = np.zeros((H,W,channel))
+    new = np.zeros(input_image.shape)
     for ch in range(channel):
         for i in range(h2,H-h2):
             for j in range(w2,W-w2):
                 sum = 0
                 for k in range(h):
                     for l in range(w):
-                        sum += input_image[i-h2+k,j-w2+l,ch]*Kernel[k,l]
-                new[i,j,ch] = sum
-    #padding
-    if (h==1 or w ==1):
-        return new #for using 1D convoluton inside filter function
-    else:
-        return reflect_padding(new, Kernel.shape) #have to...?
+                        sum += padded_image[i-h2+k,j-w2+l,ch]*Kernel[k,l]
+                new[i-h2,j-w2,ch] = sum
+    return new
+
 
     
 def median_filter(input_image, size):
@@ -66,18 +69,19 @@ def median_filter(input_image, size):
         if s % 2 == 0:
             raise Exception("size must be odd for median filter")
             
-    H, W, channel = input_image.shape #image height, width, channel
     h, w = size 
+    padded_image = reflect_padding(input_image, (h,w))
+    H, W, channel = padded_image.shape #image height, width, channel
     h2, w2 = h//2, w//2
     
     #median filtering
-    new = np.zeros((H,W,channel))
+    new = np.zeros(input_image.shape)
     for ch in range(channel):
         for i in range(h2,H-h2):
             for j in range(w2,W-w2):
-                new[i,j,ch] = np.median(input_image[i-h2:i+h2+1,j-w2:j+w2+1,ch])
+                new[i-h2,j-w2,ch] = np.median(input_image[i-h2:i+h2+1,j-w2:j+w2+1,ch])
     
-    return reflect_padding(new,(h,w))
+    return new
 
 
 
@@ -86,8 +90,8 @@ def gaussian_filter(input_image, size, sigmax, sigmay):
         if s % 2 == 0:
             raise Exception("size must be odd for median filter")
             
-    H, W, channel = input_image.shape #image height, width, channel
     h, w = size
+    padded_image = reflect_padding(input_image, (h,w))
     h2, w2 = h//2, w//2
     
     #1D Kernel
@@ -106,14 +110,14 @@ def gaussian_filter(input_image, size, sigmax, sigmay):
         rowsum += row[:,j]    
     
     #convolution
-    conv = convolve(convolve(input_image,col/colsum),row/rowsum)  
+    conv = convolve(convolve(padded_image,col/colsum),row/rowsum)  
     
-    return reflect_padding(conv,size)
+    return conv
 
 
 if __name__ == '__main__':
-    image = np.asarray(Image.open(os.path.join('images', 'baboon.jpeg')).convert('RGB'))
-    #image = np.asarray(Image.open(os.path.join('images', 'gaussian_noise.jpeg')).convert('RGB'))
+    #image = np.asarray(Image.open(os.path.join('images', 'baboon.jpeg')).convert('RGB'))
+    image = np.asarray(Image.open(os.path.join('images', 'gaussian_noise.jpeg')).convert('RGB'))
     #image = np.asarray(Image.open(os.path.join('images', 'salt_and_pepper_noise.jpeg')).convert('RGB'))
 
     logdir = os.path.join('results', 'HW1_1')
